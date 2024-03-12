@@ -301,7 +301,7 @@ sub lockfile {
 	my @gits = grep {($_->{'specifics'}{'type'} eq 'git')} @packages;
 	if (@gits) {
 		for my $pkg (values @gits) {
-			show("Recursively parsing lockfile for git sourced package \"$pkg->{'name'}\"...");
+			logger("Recursively parsing lockfile for git sourced package \"$pkg->{'name'}\"...");
 
 			my $path = $pkg->{'specifics'}{'workdir'};
 			my $git_lockfile = Util::read_file_as("$path/package-lock.json", 'encoding(UTF-8)') if -e "$path/package-lock.json";
