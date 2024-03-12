@@ -75,11 +75,11 @@ my $cwd = Cwd::abs_path();
 my $deps_dir = "$cwd/npm-deps";
 
 # output things
-my $prefix_str='*';
+my $prefix_str=' *';
 my $output_prefix = colored(['green'], $prefix_str, color('reset'));
 my $warn_prefix = colored(['yellow'], $prefix_str, color('reset'));
 my $err_prefix = colored(['red'], $prefix_str, color('reset'));
-my $query_str='>';
+my $query_str=' >';
 my $query_prefix = colored(['green'], $query_str, color('reset'));
 
 sub main {
