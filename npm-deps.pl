@@ -140,6 +140,7 @@ sub main {
 
 			if ($opt{'pack'}) {
 				my $filename = "npm-deps.tar.gz";
+				$deps_dir =~ s/$cwd\///;
 				my @cmd = (
 					'tar',
 					'--auto-compress',
@@ -150,8 +151,8 @@ sub main {
 					'--create',
 					"--file=$filename",
 					'-C',
-					"$deps_dir",
-					"\."
+					"$cwd",
+					"$deps_dir"
 				);
 				run3(\@cmd, \undef, \undef);
 				error_handler('system-tar', join(' ', @cmd)) if $?;
