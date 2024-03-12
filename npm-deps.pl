@@ -177,7 +177,7 @@ sub main {
 		elsif ($act{'verify-files'}) {
 			my ($found, $not_found) = compare_dir_to_lockfile($deps_dir, @$packages);
 
-			my $bad;
+			my $bad = 0;
 			for my $pkg (values @$found) {
 				my $data = Util::fetch($pkg->{'filename'});
 				$pkg->verify($data) ? next : ($bad = 1);
@@ -189,6 +189,8 @@ sub main {
 			}
 
 			show('Successfully verified all files') if !$bad;
+
+			exit($bad);
 		}
 	}
 }
