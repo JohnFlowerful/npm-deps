@@ -73,6 +73,7 @@ my (%opt, %act);
 # variables set by env eventually
 my $cwd = Cwd::abs_path();
 my $deps_dir = $ENV{'NPM_DEPS_DIR'} || "$cwd/npm-deps";
+my $cache_dir = $ENV{'NPM_CACHE_DIR'} || "$cwd/npm-cache";
 
 # output things
 my $prefix_str=' *';
@@ -162,7 +163,7 @@ sub main {
 		elsif ($act{'cacache'}) {
 			my ($found, $not_found) = compare_dir_to_lockfile($deps_dir, @$packages);
 
-			my $dir = Path->new("$cwd/cache/_cacache");
+			my $dir = Path->new("$cache_dir/_cacache");
 			Path::make_path($dir);
 			error_handler('dir-not-empty', $$dir) if !Util::is_empty_dir($$dir);
 
