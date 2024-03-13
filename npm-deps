@@ -188,7 +188,7 @@ sub main {
 				error("File not found for $pkg->{'name'}");
 			}
 
-			show('Successfully verified all files') if !$bad;
+			logger('Successfully verified all files') if !$bad;
 
 			exit($bad);
 		}
