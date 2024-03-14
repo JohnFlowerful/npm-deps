@@ -943,7 +943,8 @@ sub get {
 		elsif ($arg eq 'urls') {
 			$act{'uris'} = 1; }
 		elsif ($arg eq 'cacache') {
-			$act{'cacache'} = 1; }
+			$act{'cacache'} = 1;
+			$opt{'no-delete'} = 1; }
 		elsif ($arg eq 'verify-files') {
 			$act{'verify-files'} = 1; }
 		else {
