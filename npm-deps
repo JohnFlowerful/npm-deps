@@ -49,7 +49,8 @@ npm-deps [action] [options]
         --no-cleanup    Don't delete tmpdirs created for git based dependencies
 
     urls            Processes package-lock.json as would the download action, but
-                    only print the URLs
+                    only print the URLs in a format compatible with Portage's
+                    SRC_URI variable
     cacache         Generate an npm compatible cacache structure
     verify-files    Verify downloaded archives against package-lock.json's 
                     integrity string
@@ -162,9 +163,16 @@ sub main {
 		}
 
 		elsif ($act{'urls'}) {
+			my @urls;
 			for my $pkg (values @$packages) {
-				print "$pkg->{'url'}\n";
+				my @segments = $pkg->{'uri'}->path_segments();
+				if ($segments[-1] ne $pkg->{'filename'}) {
+					push(@urls, "$pkg->{'url'} -> $pkg->{'filename'}");
+					next;
+				}
+				push(@urls, "$pkg->{'url'}");
 			}
+			print join("\n", sort @urls) . "\n";
 		}
 
 		elsif ($act{'cacache'}) {
@@ -569,6 +577,7 @@ sub from_lock {
 	my $self = {
 		'name' => $pkg->{'name'},
 		'filename' => $filename || main::error_handler('no-filename', $pkg->{'name'}),
+		'uri' => $$uri,
 		'url' => $resolved || main::error_handler('no-url', $pkg->{'name'}),
 		'specifics' => \%specifics,
 	};
