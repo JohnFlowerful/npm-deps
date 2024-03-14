@@ -44,7 +44,6 @@ npm-deps [action] [options]
                         dependency integrities.
                         Also asks to delete any files not found in the updated
                         lockfile
-        --delete        Don't ask to delete old dependencies
         --no-verify     Disable dependency integrity checks
         --no-cleanup    Don't delete tmpdirs created for git based dependencies
 
@@ -58,6 +57,8 @@ npm-deps [action] [options]
   General options:
     --lockfile      Set the location of package-lock.json file
     --verbose       Show what's happening
+    --delete        Delete mismatched/extraneous dependencies and don't ask to do it
+    --no-delete     Don't delete mismatched/extraneous dependencies
     -h, --help      Show this help message
     -V, --version   Show script version
 =cut
@@ -114,7 +115,7 @@ sub main {
 					for my $pkg (values @$found) {
 						my $data = Util::fetch($pkg->{'filename'});
 						if (!$pkg->verify($data)) {
-							if ($opt{'delete'} || Util::prompt_yn("Do you want to re-download this package")) {
+							if (!$opt{'no-delete'} && ($opt{'delete'} || Util::prompt_yn("Do you want to re-download this package"))) {
 								push(@$packages, $pkg);
 								my $file = "$deps_dir/$pkg->{'filename'}";
 								logger("Deleting file $file");
@@ -225,7 +226,7 @@ sub fixup_lockfile {
 sub compare_dir_to_lockfile {
 	# splits the list of @packages into @not_found (for downloading) and
 	# @found (for verifying)
-	# finally asks to delete 
+	# finally asks to delete
 	my ($dir, @packages) = @_;
 
 	my (%pkg_files, %dir_files);
@@ -248,7 +249,7 @@ sub compare_dir_to_lockfile {
 
 	# %dir_files now contains files not listed in the lockfile
 	# ask to delete them
-	if (keys %dir_files) {
+	if (keys %dir_files && !$opt{'no-delete'}) {
 		warning("Warning: files not referenced in package-lock.json found!");
 		
 		if (!$opt{'delete'}) {
@@ -905,6 +906,8 @@ sub get {
 		$opt{'update'} = 1; },
 	'delete' => sub {
 		$opt{'delete'} = 1; },
+	'no-delete' => sub {
+		$opt{'no-delete'} = 1; },
 	'no-verify' => sub {
 		$opt{'no-verify'} = 1; },
 	'no-cleanup' => sub {
