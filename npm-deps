@@ -37,6 +37,7 @@ our $VERSION = 1.14;
 npm-deps [action] [options]
 
   Actions:
+    fixup-lockfile  Fix potential issues in package-lock.json
     download        Download and verify all dependency archives
         --pack          Tarball dependencies into a single archive once download
                         is complete
@@ -47,12 +48,11 @@ npm-deps [action] [options]
         --no-verify     Disable dependency integrity checks
         --no-cleanup    Don't delete tmpdirs created for git based dependencies
 
+    urls            Processes package-lock.json as would the download action, but
+                    only print the URLs
+    cacache         Generate an npm compatible cacache structure
     verify-files    Verify downloaded archives against package-lock.json's 
                     integrity string
-
-    cacache         Generate an npm compatible cacache structure
-
-    fixup-lockfile  Fix potential issues in package-lock.json
 
   General options:
     --lockfile      Set the location of package-lock.json file
@@ -158,6 +158,12 @@ sub main {
 				);
 				run3(\@cmd, \undef, \undef);
 				error_handler('system-tar', join(' ', @cmd)) if $?;
+			}
+		}
+
+		elsif ($act{'urls'}) {
+			for my $pkg (values @$packages) {
+				print "$pkg->{'url'}\n";
 			}
 		}
 
@@ -921,14 +927,16 @@ sub get {
 	'<>' => sub {
 		my ($arg) = @_;
 
-		if ($arg eq 'cacache') {
-			$act{'cacache'} = 1; }
+		if ($arg eq 'fixup-lockfile') {
+			$act{'fixup-lockfile'} = 1; }
 		elsif ($arg eq 'download') {
 			$act{'download'} = 1; }
+		elsif ($arg eq 'urls') {
+			$act{'urls'} = 1; }
+		elsif ($arg eq 'cacache') {
+			$act{'cacache'} = 1; }
 		elsif ($arg eq 'verify-files') {
 			$act{'verify-files'} = 1; }
-		elsif ($arg eq 'fixup-lockfile') {
-			$act{'fixup-lockfile'} = 1; }
 		else {
 			main::error_handler('unknown-action', $arg); }
 		}
