@@ -827,7 +827,7 @@ sub fetch {
 	my ($filename, $url) = @_;
 
 	if (! -e "$deps_dir/$filename" && $url) {
-		main::error_handler('not-download-action') if !$act{'download'};
+		main::error_handler('not-download-action') if !$act{'download'} && !$act{'uris'};
 
 		main::logger("Downloading " . $url);
 		my $ua = LWP::UserAgent->new();
