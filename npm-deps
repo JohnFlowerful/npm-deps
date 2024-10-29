@@ -940,7 +940,7 @@ sub get {
 			$act{'fixup-lockfile'} = 1; }
 		elsif ($arg eq 'download') {
 			$act{'download'} = 1; }
-		elsif ($arg eq 'urls') {
+		elsif ($arg eq 'uris') {
 			$act{'uris'} = 1; }
 		elsif ($arg eq 'cacache') {
 			$act{'cacache'} = 1;
