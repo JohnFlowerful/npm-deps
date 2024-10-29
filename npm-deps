@@ -328,7 +328,7 @@ sub lockfile {
 			$seen{$_}++ for @unsupported;
 			for my $script (@scripts) {
 				if ($seen{$script} && !$git_lockfile && !$force_git_deps) {
-					error_handler('git-deps-lockfile', $_->{'name'});
+					error_handler('git-deps-lockfile', $pkg->{'name'});
 				}
 			}
 
