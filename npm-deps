@@ -57,6 +57,11 @@ npm-deps [action] [options]
 
   General options:
     --lockfile      Set the location of package-lock.json file
+    --find          Descend into the current working directory and find all files
+                    titled package-lock.json, then run the action and combine the
+                    output
+    --exclude       Used in conjunction with --find. Exclude a package-lock.json
+                    file or directory tree. Can be used multiple times
     --verbose       Show what's happening
     --delete        Delete mismatched/extraneous dependencies and don't ask to do it
     --no-delete     Don't delete mismatched/extraneous dependencies
@@ -88,17 +93,34 @@ my $query_prefix = colored(['green'], $query_str, color('reset'));
 sub main {
 	OptionsHandler::get();
 
-	my $lockfile = ($opt{'lockfile'} || 'package-lock.json');
-	my $lock_content = Util::read_file_as($lockfile, 'encoding(UTF-8)');
+	my @lockfiles;
+	if ($opt{'find'}) {
+		find(sub {
+			if (-f && ($_ eq 'package-lock.json')) {
+				if (scalar(grep {($File::Find::dir =~ /^$cwd\/$_/ || $File::Find::name =~ /^$cwd\/$_$/)} @{$opt{'exclude'}}) == 0) {
+					logger("Found lockfile \"$File::Find::name\"");
+					push(@lockfiles, $File::Find::name);
+				}
+				else {
+					logger("Excluding lockfile \"$File::Find::name\"");
+				}
+			}
+		}, $cwd);
+	}
+	else {
+		push(@lockfiles, $opt{'lockfile'} || 'package-lock.json');
+	}
 
 	# do this before loading up @packages
 	if ($act{'fixup-lockfile'}) {
-		my $data = fixup_lockfile($lock_content);
-		# it wont be pretty~
-		Util::write_file($lockfile, JSON::PP::encode_json($$data)) if $data;
+		for my $lock (@lockfiles) {
+			my $data = fixup_lockfile(Util::read_file_as($lock, 'encoding(UTF-8)'));
+			# it wont be pretty~
+			Util::write_file($lock, JSON::PP::encode_json($$data)) if $data;
+		}
 	}
 	else {
-		my $packages = lockfile($lock_content, $ENV{'FORCE_GIT_DEPS'}, $ENV{'FORCE_EMPTY_CACHE'});
+		my $packages = lockfile(\@lockfiles, $ENV{'FORCE_GIT_DEPS'}, $ENV{'FORCE_EMPTY_CACHE'});
 
 		if ($act{'download'}) {
 			mkdir $deps_dir;
@@ -303,12 +325,15 @@ sub delete_files {
 }
 
 sub lockfile {
-	my ($lockfile, $force_git_deps, $force_empty_cache) = @_;
+	my ($lockfiles, $force_git_deps, $force_empty_cache) = @_;
 
 	my @packages;
-	for my $pkg (values @{get_packages($lockfile)}) {
-		my $package = Package->from_lock($pkg);
-		push(@packages, $package);
+	for my $lock (@$lockfiles) {
+		my $lock_content = Util::read_file_as($lock, 'encoding(UTF-8)');
+		for my $pkg (values @{get_packages($lock_content)}) {
+			my $package = Package->from_lock($pkg);
+			push(@packages, $package);
+		}
 	}
 
 	error_handler('no-deps') if (!@packages && !$force_empty_cache);
@@ -423,6 +448,8 @@ sub error_handler {
 			$errno=3; $show_help = 1; "No action provided" }
 		elsif ($err eq 'select-one-action') {
 			$errno=4; $show_help = 1; "Select exactly one action from \"$one\"" }
+		elsif ($err eq 'select-one-option') {
+			$errno=5; $show_help = 1; "Select exactly one option from \"$one $two\"" }
 		# package-lock.json rules
 		elsif ($err eq 'no-integrity') {
 			$errno = 10; "Registry package $one missing integrity string" }
@@ -917,6 +944,9 @@ sub get {
 	'pack' => sub {
 		$opt{'pack'} = 1; },
 	'lockfile=s' => \$opt{'lockfile'},
+	'find' => sub {
+		$opt{'find'} = 1; },
+	'exclude=s@' => \$opt{'exclude'},
 	'update' => sub {
 		$opt{'update'} = 1; },
 	'delete' => sub {
@@ -973,6 +1003,9 @@ sub option_consistency_checks {
 	}
 	elsif ($acts > 1) {
 		main::error_handler('select-one-action', join(', ', keys %act))
+	}
+	if ($opt{'lockfile'} && $opt{'find'}) {
+		main::error_handler('select-one-option', "--lockfile", "--find");
 	}
 }
 }
