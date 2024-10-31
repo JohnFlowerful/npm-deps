@@ -28,7 +28,7 @@ use Getopt::Long qw(GetOptions :config no_auto_abbrev);
 Getopt::Long::Configure ('bundling', 'no_ignore_case', 'no_getopt_compat', 'no_auto_abbrev');
 use Pod::Usage qw(pod2usage);
 
-use Data::Dumper;
+#use Data::Dumper;
 
 our $VERSION = 1.15;
 
@@ -1001,7 +1001,7 @@ sub option_consistency_checks {
 	if ($acts == 0) {
 		main::error_handler('select-action');
 	}
-	elsif ($acts > 1) {
+	if ($acts > 1) {
 		main::error_handler('select-one-action', join(', ', keys %act))
 	}
 	if ($opt{'lockfile'} && $opt{'find'}) {
