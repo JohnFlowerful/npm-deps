@@ -576,7 +576,7 @@ sub from_lock {
 
 		%specifics = (
 			'type' => 'registry',
-			'integrity' => $pkg->{'integrity'} || main::error_handler('no-integrity', $pkg->{'name'}),
+			'integrity' => Util::integrity_to_best($pkg->{'integrity'}) || main::error_handler('no-integrity', $pkg->{'name'}),
 		);
 	}
 	else {
@@ -834,15 +834,34 @@ sub make_path_error {
 {
 package Util;
 
-my %algos = ('sha1' => 1, 'sha512' => 1);
+# higher is better
+my %algos = ('sha1' => 1, 'sha512' => 2);
+
+sub integrity_to_best {
+	my ($integrity) = @_;
+
+	my ($best, $hash) = (0, undef);
+	my @hashes = split(/ /, $integrity);
+	for my $str (@hashes) {
+		my ($algo, $b64_str) = integrity_split($str);
+		($best, $hash) = ($algos{$algo}, $str) if $best < $algos{$algo};
+	}
+	return $hash;
+}
 
 sub integrity_to_hex {
 	my ($integrity) = @_;
 
+	my ($algo, $b64_str) = integrity_split($integrity);
+	return ($algo, join('', (unpack("H*", MIME::Base64::decode_base64($b64_str)))));
+}
+
+sub integrity_split {
+	my ($integrity) = @_;
+
 	my ($algo, $b64_str) = split(/-/, $integrity, 2);
 	if (exists $algos{$algo}) {
-		my $hex = join('', (unpack("H*", MIME::Base64::decode_base64($b64_str))));
-		return ($algo, $hex);
+		return ($algo, $b64_str);
 	}
 	else {
 		my $valid_algos = join(', ', keys %algos);
